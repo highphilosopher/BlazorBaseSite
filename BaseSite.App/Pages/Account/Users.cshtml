@@ -1,0 +1,188 @@
+﻿@using BaseSite.App;
+@using BaseSite.App.UserManagement;
+@using Microsoft.AspNetCore.Blazor.Services;
+@using System.Collections.Generic;
+@using System.Security.Claims;
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor _httpContextAccessor
+@inject BaseSite.App.Services.UserService userService
+@inject IUriHelper URIHelper
+@page "/account/users"
+
+<style>
+    input {
+        border-width: 4px;
+        border-collapse: collapse;
+        border-color: lightgray;
+        padding: 3px;
+    }
+
+    table.UserInfo {
+        border: 1px solid #1C6EA4;
+        background-color: #EEEEEE;
+        width: 100%;
+        text-align: center;
+        border-collapse: collapse;
+    }
+
+        table.UserInfo td, table.UserInfo th {
+            border: 3px solid #AAAAAA;
+            padding: 2px 2px;
+        }
+
+        table.UserInfo tbody td {
+            font-size: 13px;
+        }
+
+        table.UserInfo td:nth-child(even) {
+            background: #D0E4F5;
+        }
+
+        table.UserInfo thead {
+            background: #1C6EA4;
+            background: -moz-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+            background: -webkit-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+            background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+            border-bottom: 2px solid #444444;
+        }
+
+            table.UserInfo thead th {
+                font-size: 15px;
+                font-weight: bold;
+                color: #FFFFFF;
+                text-align: center;
+                border-left: 2px solid #D0E4F5;
+            }
+
+                table.UserInfo thead th:first-child {
+                    border-left: none;
+                }
+
+        table.UserInfo tfoot td {
+            font-size: 14px;
+        }
+
+        table.UserInfo tfoot .links {
+            text-align: right;
+        }
+
+            table.UserInfo tfoot .links a {
+                display: inline-block;
+                background: #1C6EA4;
+                color: #FFFFFF;
+                padding: 2px 8px;
+                border-radius: 5px;
+            }
+</style>
+<h4>Users</h4>
+<table class="UserInfo">
+    <thead>
+        <tr>
+            <th>
+                Email Address
+            </th>
+            <th>
+                Password
+            </th>
+            <th>
+                Permissions
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+    </thead>
+    @foreach (User user in userService.Users.Values)
+    {
+        <tr>
+            <td>
+                <input value="@user.Email" readonly="readonly" />
+            </td>
+            <td>
+                <input name="PWD" value="***********" type="password" readonly="readonly" />
+            </td>
+            <td>
+                @(string.Join(",", user.Permissions))
+            </td>
+            <td>
+                <NavLink class="nav-link" href="@(string.Concat("/account/edituser/", user.Email))">
+                    <span class="oi oi-pencil" aria-hidden="true"></span> Edit
+                </NavLink>
+                <NavLink class="nav-link" href="@(string.Concat("/account/deleteuser/", user.Email))">
+                    <span class="oi oi-x" aria-hidden="true"></span> Delete
+                </NavLink>
+            </td>
+        </tr>
+    }
+    <tr>
+        <td>
+            <input bind="@email" />
+        </td>
+        <td>
+            <input bind="@password" type="password" />
+        </td>
+        <td>
+            &nbsp;
+        </td>
+        <td>
+            <Button class="btn btn-primary" onclick="@Add"><span class="oi oi-plus"></span>&nbsp;Add</Button>
+        </td>
+    </tr>
+
+</table>
+
+
+@functions {
+
+    private string email { get; set; }
+    private string password { get; set; }
+
+    public void Add()
+    {
+        if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+        {
+            if (!userService.Users.ContainsKey(email))
+            {
+                BaseSite.App.UserManagement.User user = new User(email, password, new HashSet<string>() { "Login" });
+
+                userService.Users.Add(email, user);
+                email = string.Empty;
+                password = string.Empty;
+                URIHelper.NavigateTo("/account/users");
+            }
+        }
+    }
+
+    protected override void OnInit()
+    {
+        Valid("Manage Users");
+
+        base.OnInit();
+    }
+
+    private void Valid(string permission)
+    {
+        bool valid = false;
+        try
+        {
+            // Set the user to determine if they are logged in
+            ClaimsPrincipal principal = _httpContextAccessor.HttpContext.User;
+
+            if (principal?.Identity?.Name != null)
+            {
+                if (userService.Users[principal.Identity.Name].Permissions.Contains(permission))
+                {
+                    valid = true;
+                }
+            }
+        }
+        catch { }
+
+        if (!valid)
+        {
+            URIHelper.NavigateTo("/401");
+        }
+    }
+
+}
+

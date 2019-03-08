@@ -1,0 +1,70 @@
+﻿@using System.Security.Claims
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor _httpContextAccessor
+@inject BaseSite.App.Services.UserService userService
+
+<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">BaseSite</a>
+    <button class="navbar-toggler" onclick=@ToggleNavMenu>
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class=@(collapseNavMenu ? "collapse" : null) onclick=@ToggleNavMenu>
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match=NavLinkMatch.All>
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </li>
+        @if (Permissions.Contains("Manage Displays"))
+        {
+            <li class="nav-item px-3">
+                <a class="nav-link" href="displaysettings">
+                    <span class="oi oi-monitor" aria-hidden="true"></span> Displays
+                </a>
+            </li>
+        }
+        @if (Permissions.Contains("Manage Users"))
+        {
+            <li class="nav-item px-3">
+                <a class="nav-link" href="account/users">
+                    <span class="oi oi-people" aria-hidden="true"></span> Users
+                </a>
+            </li>
+        }
+    </ul>
+</div>
+
+@functions {
+    private ClaimsPrincipal User;
+
+    private HashSet<string> Permissions { get; set; }
+    
+    protected override void OnInit()
+    {
+        try
+        {
+            // Set the user to determine if they are logged in
+            User = _httpContextAccessor.HttpContext.User;
+        }
+        catch { }
+
+        Permissions = new HashSet<string>();
+
+        if (User?.Identity?.Name != null)
+        {
+            Permissions = userService.Users[User.Identity.Name].Permissions;
+        }
+
+        base.OnInit();
+    }
+
+    bool collapseNavMenu = true;
+
+    void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

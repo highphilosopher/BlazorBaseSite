@@ -1,0 +1,42 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Http
+
+@using BaseSite.App.Shared
+@page "/login"
+@inject IHttpContextAccessor _httpContextAccessor
+@inject HttpClient Http
+
+@if (User.Identity.Name != null)
+{
+    <b>You are logged in as: @User.Identity.Name</b>
+    <div class="ml-md-auto ml-sm-auto">
+        <NavLink class="btn btn-primary" href="@(string.Concat("/account/changepassword/", User.Identity.Name))" Match=NavLinkMatch.All>
+            Account
+        </NavLink>
+        <a class="btn btn-primary"
+           href="/logout?returnUrl=/"
+           target="_top">Logout</a>
+    </div>
+}
+else
+{
+    <a class="ml-md-auto ml-md-auto btn btn-primary"
+       href="/login?returnUrl=/"
+       target="_top">Login</a>
+}
+
+@functions {
+    private ClaimsPrincipal User;
+
+    protected override void OnInit()
+    {
+        base.OnInit();
+
+        try
+        {
+            // Set the user to determine if they are logged in
+            User = _httpContextAccessor.HttpContext.User;
+        }
+        catch { }
+    }
+}

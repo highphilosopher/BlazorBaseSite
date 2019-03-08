@@ -1,0 +1,75 @@
+﻿@using BaseSite.App;
+@page "/"
+
+<h1>Base Site Template</h1>
+<h2>
+    Welcome to my Base Site Template!
+</h2>
+
+<p>
+    This is a simple extension on top of the default Blazor template. It's fairly straight forward with a couple pieces added.
+</p>
+<p>
+    Additions:
+</p>
+<ul>
+    <li>Authentication/Authorization system
+    <ul>
+        <li>Basic Auth built-in.</li>
+        <li>Ttores passwords hashed with dynamic salt. (uses bcrypt hashing).</li>
+        <li>Permissions are simple string-based. Examples of implementing can be seen on the Account pages.</li>
+        <li>default username is test@test.com. Password is test. Please remove this. Seriously!</li>
+        <li>Users stored in userStore.json in the Server project.</li>
+    </ul>
+    </li>
+    <li>NotADAL data persistence
+    <ul>
+        <li>For the sake of prototyping I didn't want to mess with setting up a DAL.</li>
+        <li>The Persistence folder in the App project contains a KeyedDataStore class. It extends a generic Dictionary.</li>
+        <li>Basically you inherit from it, pick a file name, and it'll handle the serialization via json back and forth.</li>
+        <li>Persistence happens when items are updated or removed. If you modify properties of items in the collections, you can call Persist() manually.</li>
+        <li>You can't complain about the performance of the DAL, cause it's NotADAL :)</li>
+    </ul>
+    </li>
+</ul>
+<p>
+    That's pretty much it! Easy to prototype with Blazor. Just enough Authentication to feel ok with publishing to Azure for testing.
+</p>
+<h3>
+    Credits
+</h3>
+<p>
+    The cookie authentication piece is a great piece of functionality. It came from this article on <a href="http://lightswitchhelpwebsite.com/Blog/tabid/61/EntryId/4316/A-Demonstration-of-Simple-Server-side-Blazor-Cookie-Authentication.aspx" target="_blank">Light Switch</a> article (opens in a new window).
+    Michael Washington, you're awesome!
+</p>
+<p>
+    BCrypt.NET, cause I'm not actually smart enough to implement bcrypt myself (obviously).
+</p>
+<p>
+    Obviously the base template here is from the Blazor team! Dear giants, we love standing on your shoulders!
+</p>
+<h3>License</h3>
+<p>Do what you want? No seriously, it's MIT license. Although I'd always love to hear what people are using it for.</p>
+<pre>
+    MIT License
+
+    Copyright (c) 2019 Samuel Warren
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+</pre>

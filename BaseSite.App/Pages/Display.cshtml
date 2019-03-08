@@ -1,0 +1,60 @@
+﻿@page "/display"
+@page "/display/{key}"
+@inject Services.DisplayService displays
+@layout DisplayLayout
+<style>
+    @((MarkupString)displays[Key].CSS)
+
+    .ticker-wrap {
+        @if(String.IsNullOrEmpty(displays[Key].TickerText))
+        {
+            @: Display: none;
+        }
+    }
+</style>
+<table class="BannerTable" style="background-image: url(@displays[Key].Background);background-size: cover;">
+    <thead>
+        <tr>
+            <td class="Logo"><img src="@displays[Key].Logo" /></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="Banner">
+                @if (String.IsNullOrEmpty(displays[Key].ContentHTML))
+                {
+                    @displays[Key].ContentText
+                }
+                @((MarkupString)displays[Key].ContentHTML)
+            </td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+<div class="ticker-wrap"><div class="ticker"><div class="ticker__item">@displays[Key].TickerText</div></div></div>
+
+
+@functions
+{
+    [Parameter]
+    private String Key { get; set; }
+
+
+    protected override void OnInit()
+    {
+        Key = Key.Replace("%20", " ");
+        displays.Updated += OnChanged;
+        base.OnInit();
+    }
+
+    public void OnChanged(object e, EventArgs args)
+    {
+        this.StateHasChanged();
+    }
+
+
+}

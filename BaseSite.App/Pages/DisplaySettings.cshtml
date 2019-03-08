@@ -1,0 +1,275 @@
+﻿@using Microsoft.AspNetCore.Blazor.Services;
+@using System.Security.Claims;
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor _httpContextAccessor
+@inject BaseSite.App.Services.UserService userService
+@inject Services.DisplayService displays
+@inject IUriHelper URIHelper
+@page "/displaysettings"
+@page "/displaysettings/{key}"
+
+<style>
+    .AddNew {
+        @if (DetailView)
+        {
+            @:display: none;
+        }
+    }
+
+    .DisplayList {
+        @if(DetailView)
+        {
+            @: display: none;
+        }
+        font-size: large;
+    }
+
+    .DisplayList > dt > a {
+    font-size: xx-large;
+    }
+
+    .Details {
+        @if(!DetailView)
+        {
+            @: display:none;
+        }
+
+    }
+
+
+    table.Details {
+        font-family: Arial, Helvetica, sans-serif;
+        border: 1px solid #1C6EA4;
+        background-color: #EEEEEE;
+        width: 100%;
+        text-align: center;
+        border-collapse: collapse;
+    }
+
+        table.Details td, table.Details th {
+            border: 3px solid #AAAAAA;
+            padding: 2px 2px;
+        }
+
+        table.Details tbody td {
+            font-size: 13px;
+        }
+
+        table.Details tr:nth-child(even) {
+            background: #D0E4F5;
+        }
+
+        table.Details tfoot td {
+            font-size: 14px;
+        }
+
+        table.Details tfoot .links {
+            text-align: right;
+        }
+
+            table.Details tfoot .links a {
+                display: inline-block;
+                background: #1C6EA4;
+                color: #FFFFFF;
+                padding: 2px 8px;
+                border-radius: 5px;
+            }
+
+        table.Details > tr > td > p {
+            font-weight: bold;
+        }
+
+        table.Details > tr > td > textarea {
+            height: 200px;
+            width: 100%;
+            resize:none;
+        }
+       table.Details > tr > td > input {
+        border-width: 4px;
+        border-collapse: collapse;
+        border-color: lightgray;
+        padding: 3px;
+    }
+</style>
+
+
+@if (DetailView)
+{
+    <table class="Details">
+        <tr>
+            <td><p>Name</p><input name="Name" type="text" bind="NewKey" /></td>
+        </tr>
+        <tr>
+            <td><p>Description</p><input name="Description" type="text" bind="displays[Key].Description" /></td>
+        </tr>
+        <tr>
+            <td><p>Logo</p><input name="Logo" type="text" bind="displays[Key].Logo" /></td>
+        </tr>
+        <tr>
+            <td><p>Ticker Text</p><input name="TickerText" type="text" bind="displays[Key].TickerText" /></td>
+        </tr>
+        <tr>
+            <td><p>Background Image URL</p><input name="Background" type="text" bind="displays[Key].Background" /></td>
+        </tr>
+        <tr>
+            <td><p>Content Text</p><input name="ContentText" type="text" bind="displays[Key].ContentText" /></td>
+        </tr>
+        <tr>
+            <td><p>Content HTML (If this has a value, the Content Text will not display)</p><textarea name="ContentHTML" rows="6" cols="120" bind="displays[Key].ContentHTML" /></td>
+        </tr>
+        <tr>
+            <td><p>Custom CSS</p><textarea name="CSS" rows="6" cols="120" bind="displays[Key].CSS" /></td>
+        </tr>
+        <tr>
+            <td>
+                <div style="">
+                    <button onclick="@Save">Save</button>
+                    <button onclick="@Remove">Remove</button>
+                </div>
+            </td>
+        </tr>
+    </table>
+}
+else
+{
+    <div class="AddNew"><label for="NewKey">New Display Name:</label><input id="NewKey" type="text" bind="@NewKey" />&nbsp;&nbsp;<button class="ml-md-auto btn btn-primary" onclick="@AddNew">Add</button></div>
+
+    <dl class="DisplayList">
+        @foreach (var display in displays)
+        {
+            <dt>
+                <button name="Duplicate" title="Duplicate" onclick="@(() => Duplicate(display.Key))"> <span class="oi oi-layers" aria-hidden="true"></span></button>
+                <button name="Open" title="Open In New Window/Tab" onclick="@(() => OpenLink($"/display/{display.Key}",true))"> <span class="oi oi-external-link" aria-hidden="true"></span></button>
+                <a onclick="@(() => OpenSettings(display.Key))" href="/displaysettings/#">@display.Key</a>
+            </dt>
+            @if (!string.IsNullOrEmpty(display.Value.Description))
+            {
+                <dd style="margin-left: 40px;">@display.Value.Description</dd>
+            }
+        }
+    </dl>
+}
+@functions
+{
+
+    #region Properties
+
+    [Parameter]
+    string Key { get; set; } = "__";
+
+    Boolean DetailView
+    {
+        get => !Key.Equals("__");
+    }
+
+    public string NewKey { get; set; }
+
+    #endregion
+
+    #region Methods
+
+    protected override void OnInit()
+    {
+
+        Valid("Manage Displays");
+        
+        displays.Updated += OnChanged;
+        base.OnInit();
+    }
+
+    private void Valid(string permission)
+    {
+        bool valid = false;
+        try
+        {
+            // Set the user to determine if they are logged in
+            ClaimsPrincipal principal = _httpContextAccessor.HttpContext.User;
+
+            if (principal?.Identity?.Name != null)
+            {
+                if (userService.Users[principal.Identity.Name].Permissions.Contains(permission))
+                {
+                    valid = true;
+                }
+            }
+        }
+        catch { }
+
+        if (!valid)
+        {
+            URIHelper.NavigateTo("/401");
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Key = Key.Replace("%20", " ");
+        if (DetailView)
+        {
+            NewKey = Key;
+            this.StateHasChanged();
+        }
+    }
+
+    public void OnChanged(object e, EventArgs args)
+    {
+        this.StateHasChanged();
+    }
+
+    public void AddNew()
+    {
+        if (!string.IsNullOrEmpty(NewKey))
+        {
+            displays.Add(System.Web.HttpUtility.HtmlEncode(NewKey), BaseSite.App.Services.Display.Default);
+            NewKey = string.Empty;
+        }
+    }
+
+    public void Save()
+    {
+        if (DetailView)
+        {
+            if (NewKey != Key)
+            {
+                displays.ChangeKey(Key, NewKey);
+            }
+            else
+            {
+                displays.Persist();
+            }
+            NewKey = string.Empty;
+            Key = "__";
+            URIHelper.NavigateTo("displaysettings");
+        }
+    }
+
+    public void Remove()
+    {
+        displays.Remove(Key);
+        Key = "__";
+        URIHelper.NavigateTo("displaysettings");
+    }
+
+    public void Duplicate(string dupKey)
+    {
+        displays.Duplicate(dupKey);
+    }
+
+    public void OpenSettings(string name)
+    {
+        URIHelper.NavigateTo($"displaysettings/{name}");
+    }
+
+    public void OpenLink(string url, bool NewTab)
+    {
+        String tabName = "";
+        if (NewTab)
+        {
+            tabName = "_blank";
+        }
+        Microsoft.JSInterop.JSRuntime.Current.InvokeAsync<int>("open", url, tabName);
+    }
+
+    #endregion
+}

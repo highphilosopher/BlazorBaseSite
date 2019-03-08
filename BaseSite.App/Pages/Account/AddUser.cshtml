@@ -1,0 +1,86 @@
+﻿@using BaseSite.App;
+@using BaseSite.App.UserManagement;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Blazor.Services;
+@using System.Security.Claims;
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor _httpContextAccessor
+@inject BaseSite.App.Services.UserService userService
+@inject IUriHelper URIHelper
+@page "/account/adduser"
+
+<table>
+    <thead>
+        <tr>
+            <td>
+                Email Address
+            </td>
+            <td>
+                Password
+            </td>
+        </tr>
+    </thead>
+    <tr>
+        <td>
+            <input bind="@email" />
+        </td>
+        <td>
+            <input bind="@password" />
+        </td>
+        <td>
+            <button onclick="@Add">Add</button>
+        </td>
+    </tr>
+</table>
+
+@functions {
+
+    private string email { get; set; }
+    private string password { get; set; }
+
+    protected override void OnInit()
+    {
+        Valid("Manage Users");
+
+        base.OnInit();
+    }
+
+    private void Valid(string permission)
+    {
+        bool valid = false;
+        try
+        {
+            // Set the user to determine if they are logged in
+            ClaimsPrincipal principal = _httpContextAccessor.HttpContext.User;
+
+            if (principal?.Identity?.Name != null)
+            {
+                if (userService.Users[principal.Identity.Name].Permissions.Contains(permission))
+                {
+                    valid = true;
+                }
+            }
+        }
+        catch { }
+
+        if (!valid)
+        {
+            URIHelper.NavigateTo("/401");
+        }
+    }
+
+    public void Add()
+    {
+        if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+        {
+            if (!userService.Users.ContainsKey(email))
+            {
+                BaseSite.App.UserManagement.User user = new User(email, password, new HashSet<string>() { "Login" });
+
+                userService.Users.Add(email, user);
+            }
+        }
+    }
+
+
+}
