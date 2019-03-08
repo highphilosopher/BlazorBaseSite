@@ -8,7 +8,7 @@ Additions:
 
 *   Authentication/Authorization system
     *   Basic Auth built-in.
-    *   Ttores passwords hashed with dynamic salt. (uses bcrypt hashing).
+    *   Stores passwords hashed with dynamic salt. (uses bcrypt hashing).
     *   Permissions are simple string-based. Examples of implementing can be seen on the Account pages.
     *   default username is test@test.com. Password is test. Please remove this. Seriously!
     *   Users stored in userStore.json in the Server project.
@@ -28,3 +28,16 @@ The cookie authentication piece is a great piece of functionality. It came from 
 BCrypt.NET, cause I'm not actually smart enough to implement bcrypt myself (obviously).
 
 Obviously the base template here is from the Blazor team! Dear giants, we love standing on your shoulders!
+
+### How To Use
+
+This is setup as a dotnet template.
+
+```powershell
+dotnet new --install "<path to the root folder which contains the .template.config folder>"
+```
+
+Then in your new project folder, simply run this command
+```powershell
+dotnet new BlazorBaseSite
+```
